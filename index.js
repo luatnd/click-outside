@@ -1,3 +1,13 @@
+const isTouch = 'ontouchstart' in window || navigator.msMaxTouchPoints > 0
+
+/**
+ * Need to click on non-touch or touchstart on touch screen, because:
+ *    	`click` event will not work on Safari mobile because you can not fire click event when click on non-clickable
+ * 		`touchstart` event will not work on non-touch devices
+ */
+const eventName = isTouch ? 'touchstart' : 'click'
+
+
 function validate(binding) {
   if (typeof binding.value !== 'function') {
     console.warn('[Vue-click-outside:] provided expression', binding.expression, 'is not a function.')
@@ -42,7 +52,7 @@ exports = module.exports = {
       // some components may have related popup item, on which we shall prevent the click outside event handler.
       var elements = e.path || (e.composedPath && e.composedPath())
       elements && elements.length > 0 && elements.unshift(e.target)
-      
+
       if (el.contains(e.target) || isPopup(vNode.context.popupItem, elements)) return
 
       el.__vueClickOutside__.callback(e)
@@ -53,16 +63,16 @@ exports = module.exports = {
       handler: handler,
       callback: binding.value
     }
-    !isServer(vNode) && document.addEventListener('click', handler)
+    !isServer(vNode) && document.addEventListener(eventName, handler)
   },
 
   update: function (el, binding) {
     if (validate(binding)) el.__vueClickOutside__.callback = binding.value
   },
-  
+
   unbind: function (el, binding, vNode) {
     // Remove Event Listeners
-    !isServer(vNode) && document.removeEventListener('click', el.__vueClickOutside__.handler)
+    !isServer(vNode) && document.removeEventListener(eventName, el.__vueClickOutside__.handler)
     delete el.__vueClickOutside__
   }
 }
